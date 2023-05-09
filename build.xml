@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="web" default="build" basedir=".">
+    <description>
+        author: Dau Cong Tuan Anh
+        Group: P32151
+        contact: tuananhdaucong@gmail.com
+    </description>
+    <property file="build.properties"/>
+
+    <target name="compile" >
+        <echo>Compiling...</echo>
+        <mkdir dir="build/classes" />
+    </target>
+    <target name="build">
+
+    </target>
+
+</project>
