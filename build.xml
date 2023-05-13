@@ -259,9 +259,29 @@
     <target name="env" description="builds and runs the program in alternative environments;
                                     the environment is set by the java version
                                     and a set of virtual machine arguments in the options file.">
+        <antcall target="clean"/>
+        <antcall target="build"/>
+        <echo>Deploy war file to wildfly environment</echo>
+        <copy todir="${wildfly.deploy.dir}">
+            <file file="${build.dir}/${app.name}.war"/>
+        </copy>
+        <echo> setup JAVA_HOME path</echo>
+        <property name="JAVA_HOME" location="/path/to/java/home"/>
+
+        <exec executable="cmd" osfamily="${env.osfamily}" failonerror="true">
+            <arg value="${env.runcmd}"/>
+            <arg value="${env.script}"/>
+        </exec>
+    </target>
+    <target name="history" description="if the project fails to compile ( compile target ),
+                                        the previous version from the svn repository is loaded.
+                                        The operation is repeated until the project can be built,
+                                        or the very first revision from the repository is received.
+                                        If such a revision is found, then a file is generated
+                                        containing the result of the diff operation for all files changed
+                                        in the revision immediately following the last working revision.">
 
     </target>
-
 
 
 </project>
