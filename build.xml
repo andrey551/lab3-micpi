@@ -7,7 +7,6 @@
     </description>
 
     <property file="build.properties"/>
-    <taskdef resource="net/sf/antcontrib/antlib.xml"/>
     <macrodef name="generate-hash" description="Generate hash code for project and write to MANIFEST.MF">
         <attribute name="algorithm"/>
         <sequential >
@@ -28,18 +27,21 @@
     </macrodef>
 
     <macrodef name="git-commit"
-              description="commit changes to git repository and generate .zip file">
-        <attribute name="commit"/>
-        <attribute name="dest"/>
+              description="commit changes to git repository">
+<!--        <attribute name="commit"/>-->
+<!--        <attribute name="dest"/>-->
         <sequential>
-            <exec executable="git">
-                <arg value="archive"/>
-                <arg value="--format=zip"/>
-                <arg value="--output=@{dest}"/>
-                <arg value="@{commit}"/>
+            <exec executable="git" dir="${src.dir}" failonerror="true">
+                <arg line="commit -a -m update"/>
+<!--                <arg line="commit " value="commit"/>-->
+<!--                <arg value="${git.repo.url}"/>-->
+<!--                <arg value=""/>-->
             </exec>
         </sequential>
     </macrodef>
+<!--    <macrodef name="git-pull" description="pull commit">-->
+
+<!--    </macrodef>-->
 
     <path id="lib.main.path">
         <fileset dir="${lib.main.dir}" includes="**/*.jar"/>
@@ -50,6 +52,9 @@
         <path refid="lib.main.path"/>
         <fileset dir="${lib.test.dir}" includes="**/*.jar"/>
     </path>
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath refid="lib.main.path"/>
+    </taskdef>
     <target name="compile" description="compilation of project source codes.">
         <echo>Compiling sources code...</echo>
         <property name="srcdir" value="${src.main.dir}"/>
@@ -188,10 +193,29 @@
                                     commits to the git repository.">
         <echo>Detecting list file's change...</echo>
         <git-check-state outputproperty="diff.status"/>
+        <echo>"${diff.status}"</echo>
         <echo>Searching for changes in specified classes...</echo>
-<!--        <for param="i" list="${diff.classes}" delimiter=" ">-->
+        <for param="i" list="${diff.classes}" delimiter=' '>
+            <sequential>
+                <condition property="commit">
+                    <not>
+                        <contains string="diff.status"
+                                  substring="@{i}.java"/>
+                    </not>
+                </condition>
+            </sequential>
+        </for>
 
-<!--        </for>-->
+        <if>
+            <isset property="commit"/>
+            <then>
+                <echo>Change found: Commit in progress...</echo>
+                <git-commit />
+            </then>
+            <else>
+                <echo>Change is not found: Completing...</echo>
+            </else>
+        </if>
     </target>
 
     <target name="report" description="in case of successful tests, saves the junit report in xml format,

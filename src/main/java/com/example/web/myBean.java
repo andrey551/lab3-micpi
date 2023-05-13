@@ -19,7 +19,7 @@ public class myBean implements Serializable {
     private String x;
     private String y;
     private String r;
-
+// comment 2
     private String message;
 
     public String getX() {
@@ -87,5 +87,9 @@ public class myBean implements Serializable {
 
     public List<Point> getStorage() {
         return this.storage;
+    }
+
+    public void check() {
+        System.out.print('c');
     }
 }

@@ -16,6 +16,7 @@ public class DatabaseHandle {
     private final String dbPassword = "";
     private Connection connection;
 
+    // Comment 1
     public DatabaseHandle() {
         connectToDatabase();
     }
@@ -48,5 +49,8 @@ public class DatabaseHandle {
             e.printStackTrace();
         }
         return "Cannot execute request!";
+    }
+    public void check() {
+        System.out.print('c');
     }
 }
