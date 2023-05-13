@@ -1,6 +1,7 @@
 package com.example.web;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Point implements Serializable {
     private String x;
@@ -25,6 +26,11 @@ public class Point implements Serializable {
             result = "Hit";
         else
             result = "Miss";
+    }
+
+    public static boolean check(String x, String y, String r) {
+        if(new Point(x, y, r).getResult().compareTo("Hit") == 0) return true;
+        return false;
     }
 
     public String getX() {

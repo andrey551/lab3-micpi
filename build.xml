@@ -5,14 +5,200 @@
         Group: P32151
         contact: tuananhdaucong@gmail.com
     </description>
+
     <property file="build.properties"/>
+    <taskdef resource="net/sf/antcontrib/antlib.xml"/>
+    <macrodef name="generate-hash" description="Generate hash code for project and write to MANIFEST.MF">
+        <attribute name="algorithm"/>
+        <sequential >
+            <signjar jar="${build.dir}/${ant.project.name}.war"
+                     alias="${keystore.alias}"
+                     storepass="${keystore.storepass}"
+                     digestalg="@{algorithm}"/>
+        </sequential>
+    </macrodef>
 
-    <target name="compile" >
-        <echo>Compiling...</echo>
-        <mkdir dir="build/classes" />
+    <macrodef name="git-check-state" description="compare with copy working files">
+        <attribute name="outputproperty"/>
+        <sequential>
+            <exec executable="git" outputproperty="@{outputproperty}">
+                <arg value="status"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="git-commit"
+              description="commit changes to git repository and generate .zip file">
+        <attribute name="commit"/>
+        <attribute name="dest"/>
+        <sequential>
+            <exec executable="git">
+                <arg value="archive"/>
+                <arg value="--format=zip"/>
+                <arg value="--output=@{dest}"/>
+                <arg value="@{commit}"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <path id="lib.main.path">
+        <fileset dir="${lib.main.dir}" includes="**/*.jar"/>
+
+    </path>
+
+    <path id="lib.test.path">
+        <path refid="lib.main.path"/>
+        <fileset dir="${lib.test.dir}" includes="**/*.jar"/>
+    </path>
+    <target name="compile" description="compilation of project source codes.">
+        <echo>Compiling sources code...</echo>
+        <property name="srcdir" value="${src.main.dir}"/>
+        <mkdir dir="${build.classes.dir}" />
+        <javac srcdir="${srcdir}"
+                destdir="${build.classes.dir}"
+                includeantruntime="false">
+            <classpath refid="lib.main.path" />
+        </javac>
+
+        <echo>Compiling tests code</echo>
+        <mkdir dir="${test.dir}"/>
+        <javac srcdir="${src.test.dir}"
+               destdir="${test.dir}"
+               includeantruntime="false">
+            <classpath>
+                <path refid="lib.test.path"/>
+                <pathelement location="${build.classes.dir}"/>
+            </classpath>
+        </javac>
     </target>
-    <target name="build">
+    <target name="build"
+            depends="compile"
+            description="Compiling project sources and packing them into an executable jar">
+
+        <echo>Copying libraries on WEB-INF/lib...</echo>
+        <copy todir="${build.web-inf.lib}">
+            <path refid="lib.main.path"/>
+        </copy>
+
+        <echo> Copying all file on WEB-INF...</echo>
+        <copy todir="${build.web-inf}">
+            <fileset dir="${src.main.web}/WEB-INF"/>
+        </copy>
+
+        <echo> Copying resources...</echo>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.main.resources}"/>
+        </copy>
+
+        <echo>Copying all static files to root of war file, ignore directory WEB-INF...</echo>
+        <copy todir="${build.dir}">
+            <fileset dir="${src.main.web}">
+                <exclude name="WEB-INF/**"/>
+            </fileset>
+        </copy>
+
+        <echo>Creating war file...</echo>
+        <property name="war" value="${build.dir}/${ant.project.name}.war"/>
+        <war destfile="${war}" >
+            <fileset dir="${build.dir}" />
+        </war>
+    </target>
+
+    <target name="clean" description="remove compiled project classes and all temporary file">
+        <echo>Deleting classes directory... </echo>
+        <delete dir="${build.dir}"/>
+
+        <echo>Deleting test class directory...</echo>
+        <delete dir="${test.dir}"/>
+
+        <echo>Deleting docs directory...</echo>
+        <delete dir="${doc.dir}"/>
+
+        <echo>Deleting native2ascii directory...</echo>
+        <delete dir="${native2ascii.resources}"/>
+    </target>
+
+    <target name="test" description="run the project's junit tests" depends="build">
+        <echo> Creating directory for test case's report</echo>
+        <mkdir dir="${test.report.dir}"/>
+        <echo> Testing...</echo>
+        <junit printsummary="true"
+                       haltonfailure="true">
+            <classpath>
+                <path refid="lib.test.path"/>
+                <pathelement location="${build.dir}"/>
+                <pathelement location="${build.classes.dir}"/>
+                <pathelement location="${test.dir}"/>
+            </classpath>
+            <formatter type="xml"/>
+            <test name = "TestPoint" todir="${test.report.dir}" />
+
+        </junit>
+    </target>
+
+    <target name="xml" description="validation of all xml files in the project">
+        <echo> Validating all xml files...</echo>
+        <xmlvalidate failonerror="no">
+            <fileset dir="${src.dir}" includes="**/*.xml"/>
+        </xmlvalidate>
+    </target>
+
+    <target name="music" description="play music when the build completes">
+        <sound>
+            <success source="${music.success.file}"/>
+            <fail source="${music.fail.file}"/>
+        </sound>
+        <antcall target="build"/>
+    </target>
+
+    <target name="doc"
+            description="adding MD5 and SHA-1 project files to MANIFEST.MF,
+            as well as generating and adding javadoc to the archive for all project classes"
+            depends="build">
+        <mkdir dir="${doc.dir}"/>
+        <echo>Generating SHA1 hash code...</echo>
+        <generate-hash algorithm="SHA1"/>
+
+        <echo>Generating MD5 hash code...</echo>
+        <generate-hash algorithm="MD5"/>
+
+        <echo>Generating Javadoc</echo>
+        <javadoc destdir="${doc.dir}"
+                 author="true"
+                 version="true"
+                 use="true">
+            <classpath refid="lib.main.path"/>
+            <fileset dir="${src.main.dir}"/>
+        </javadoc>
+
+        <echo>Compiling jar-archive with javadoc</echo>
+        <jar destfile="${doc.dir}/JavaDocs"
+             basedir="${doc.dir}"
+             update="true"/>
+    </target>
+
+    <target name="native2ascii" description="native2ascii conversion for copies of localization files">
+        <native2ascii src="${src.main.resources}"
+                      dest="${native2ascii.resources}"
+                      includes="**/*.properties"/>
+    </target>
+
+    <target name="diff" description="checks the state of the working copy,
+                                    and if the changes do not concern the classes specified in the parameters file,
+                                    commits to the git repository.">
+        <echo>Detecting list file's change...</echo>
+        <git-check-state outputproperty="diff.status"/>
+        <echo>Searching for changes in specified classes...</echo>
+<!--        <for param="i" list="${diff.classes}" delimiter=" ">-->
+
+<!--        </for>-->
+    </target>
+
+    <target name="report" description="in case of successful tests, saves the junit report in xml format,
+                                        adds it to the svn repository and commits">
 
     </target>
+
+
 
 </project>
