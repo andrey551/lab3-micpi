@@ -28,20 +28,19 @@
 
     <macrodef name="git-commit"
               description="commit changes to git repository">
-<!--        <attribute name="commit"/>-->
-<!--        <attribute name="dest"/>-->
         <sequential>
             <exec executable="git" dir="${src.dir}" failonerror="true">
                 <arg line="commit -a -m update"/>
-<!--                <arg line="commit " value="commit"/>-->
-<!--                <arg value="${git.repo.url}"/>-->
-<!--                <arg value=""/>-->
             </exec>
         </sequential>
     </macrodef>
-<!--    <macrodef name="git-pull" description="pull commit">-->
-
-<!--    </macrodef>-->
+    <macrodef name="git-push" description="push changes">
+        <sequential>
+            <exec executable="git" dir="${src.dir}" failonerror="true">
+                <arg line="push"/>
+            </exec>
+        </sequential>
+    </macrodef>
 
     <path id="lib.main.path">
         <fileset dir="${lib.main.dir}" includes="**/*.jar"/>
@@ -137,7 +136,6 @@
             </classpath>
             <formatter type="xml"/>
             <test name = "TestPoint" todir="${test.report.dir}" />
-
         </junit>
     </target>
 
@@ -217,9 +215,50 @@
             </else>
         </if>
     </target>
-
+    <target name="git-push" description="pull all changes to repo">
+        <git-push/>
+    </target>
     <target name="report" description="in case of successful tests, saves the junit report in xml format,
                                         adds it to the svn repository and commits">
+        <antcall target="clean"/>
+        <antcall target="test"/>
+        <echo>Test done!</echo>
+
+<!--        <trycatch>-->
+<!--            <try>-->
+<!--                <echo> Transferring report to svn repo...</echo>-->
+<!--                <scp-->
+<!--                        todir="${scp.url}"-->
+<!--                        password="${scp.password}"-->
+<!--                        port="${scp.port}"-->
+<!--                        trust="true">-->
+<!--                    <fileset dir="${test.report.dir}">-->
+<!--                        <include name="*TEST*.xml"/>-->
+<!--                    </fileset>-->
+<!--                </scp>-->
+<!--            </try>-->
+<!--            <catch>-->
+<!--                <echo>Can't transfer report to scp</echo>-->
+<!--            </catch>-->
+<!--        </trycatch>-->
+        <sequential>
+            <exec executable="svn" >
+                <arg value="add"/>
+                <arg value="${test.report.dir}/*TEST*.xml"/>
+                <arg value="--force"/>
+            </exec>
+            <echo>Committing...</echo>
+            <exec executable="svn">
+                <arg value="commit"/>
+                <arg value="-m"/>
+                <arg value="commit_report"/>
+            </exec>
+        </sequential>
+    </target>
+
+    <target name="env" description="builds and runs the program in alternative environments;
+                                    the environment is set by the java version
+                                    and a set of virtual machine arguments in the options file.">
 
     </target>
 
