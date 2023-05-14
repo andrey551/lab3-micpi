@@ -295,20 +295,20 @@
         </exec>
         <propertyregex property="svn.revision" input="${svn.info.output}" regexp="Revision: (\d+)" select="\1"/>
         <echo> number of revision: ${svn.revision}</echo>
-        <for param="i" begin="${svn.revision}" end="0">
+        <for param="i" begin="${svn.revision}" end="0" step="-1">
             <sequential>
                 <trycatch>
                     <try>
                         <echo>Trying to compile revision @{i}...</echo>
                         <antcall target="compile"/>
-<!--                        <exec executable="svn">-->
-<!--                            <arg value="diff"/>-->
-<!--                            <arg value="-r"/>-->
-<!--                            <arg value="@{i}:HEAD"/>-->
-<!--                            <arg value="&#45;&#45;summarize"/>-->
-<!--                            <arg value="&#45;&#45;xml"/>-->
-<!--                            <arg value="${svn.local.dir}"/>-->
-<!--                        </exec>-->
+                        <exec executable="svn">
+                            <arg value="diff"/>
+                            <arg value="-r"/>
+                            <arg value="@{i}:HEAD"/>
+                            <arg value="--summarize"/>
+                            <arg value="--xml"/>
+                            <arg value="${svn.local.dir}"/>
+                        </exec>
                         <fail message="found revision that can build"/>
                     </try>
                     <catch>

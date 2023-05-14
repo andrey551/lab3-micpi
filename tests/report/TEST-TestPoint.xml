@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite errors="0" failures="0" hostname="DESKTOP-7DV458L" name="TestPoint" skipped="0" tests="3" time="0.044" timestamp="2023-05-14T11:16:58">
+<testsuite errors="0" failures="0" hostname="DESKTOP-7DV458L" name="TestPoint" skipped="0" tests="3" time="0.041" timestamp="2023-05-14T19:41:27">
   <properties>
     <property name="java.vendor" value="Oracle Corporation" />
     <property name="src.test.dir" value="src/test/java" />
@@ -58,7 +58,7 @@
     <property name="user.home" value="C:\Users\Never" />
     <property name="java.version.date" value="2023-04-18" />
     <property name="java.specification.vendor" value="Oracle Corporation" />
-    <property name="keystore.storepass" value="your_keystore_password" />
+    <property name="keystore.storepass" value="05052001" />
     <property name="test.dir" value="tests" />
     <property name="java.library.path" value="C:\Program Files\Java\jdk-20\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\Program Files\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\msys64\mingw64\bin;C:\Program Files\PuTTY\;C:\Program Files\nodejs\;C:\Users\Never\apache-ant-1.9.16\bin;C:\Program Files\Java\jdk-20\bin;C:\Program Files\VisualSVN Server\bin;C:\Program Files\TortoiseSVN\bin;C:\Users\Never\AppData\Local\Programs\Python\Python311\Scripts\;C:\Users\Never\AppData\Local\Programs\Python\Python311\;C:\Users\Never\AppData\Local\Microsoft\WindowsApps;C:\Users\Never\AppData\Local\GitHubDesktop\bin;C:\Users\Never\AppData\Local\Programs\Microsoft VS Code\bin;C:\msys64\mingw64\bin;C:\Users\Never\AppData\Roaming\npm;." />
     <property name="java.vendor.url" value="https://java.oracle.com/" />
@@ -91,7 +91,7 @@
     <property name="env.osfamily" value="windows" />
     <property name="build.web-inf.lib" value="build/WEB-INF/lib" />
     <property name="basedir" value="C:\Users\Never\IdeaProjects\web" />
-    <property name="keystore.alias" value="your_alias name" />
+    <property name="keystore.alias" value="server" />
     <property name="ant.java.version" value="20" />
     <property name="ant.core.lib" value="C:\Users\Never\apache-ant-1.9.16\lib\ant.jar" />
     <property name="diff.classes" value="myBean" />
@@ -103,9 +103,9 @@
     <property name="ant.project.invoked-targets" value="test" />
     <property name="build.web-inf" value="build/WEB-INF" />
   </properties>
-  <testcase classname="TestPoint" name="test1" time="0.004" />
-  <testcase classname="TestPoint" name="test2" time="0.0" />
-  <testcase classname="TestPoint" name="test3" time="0.001" />
+  <testcase classname="TestPoint" name="test1" time="0.006" />
+  <testcase classname="TestPoint" name="test2" time="0.001" />
+  <testcase classname="TestPoint" name="test3" time="0.0" />
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
