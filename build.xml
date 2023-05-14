@@ -7,6 +7,7 @@
     </description>
 
     <property file="build.properties"/>
+
     <macrodef name="generate-hash" description="Generate hash code for project and write to MANIFEST.MF">
         <attribute name="algorithm"/>
         <sequential >
@@ -54,6 +55,7 @@
     <taskdef resource="net/sf/antcontrib/antlib.xml">
         <classpath refid="lib.main.path"/>
     </taskdef>
+
     <target name="compile" description="compilation of project source codes.">
         <echo>Compiling sources code...</echo>
         <property name="srcdir" value="${src.main.dir}"/>
@@ -273,6 +275,7 @@
             <arg value="${env.script}"/>
         </exec>
     </target>
+    <property name="svn.info.command" value="svn info ${svn.trunk.dir}"/>
     <target name="history" description="if the project fails to compile ( compile target ),
                                         the previous version from the svn repository is loaded.
                                         The operation is repeated until the project can be built,
@@ -280,7 +283,46 @@
                                         If such a revision is found, then a file is generated
                                         containing the result of the diff operation for all files changed
                                         in the revision immediately following the last working revision.">
-
+        <exec executable="svn" >
+            <arg value="add"/>
+            <arg value="."/>
+            <arg value="--force"/>
+        </exec>
+        <antcall target="clean"/>
+        <exec executable="cmd" outputproperty="svn.info.output">
+            <arg value="/c"/>
+            <arg value="${svn.info.command}"/>
+        </exec>
+        <propertyregex property="svn.revision" input="${svn.info.output}" regexp="Revision: (\d+)" select="\1"/>
+        <echo> number of revision: ${svn.revision}</echo>
+        <for param="i" begin="${svn.revision}" end="0" step="-1">
+            <sequential>
+                <trycatch>
+                    <try>
+                        <echo>Trying to compile revision @{i}...</echo>
+                        <antcall target="compile"/>
+<!--                        <exec executable="svn">-->
+<!--                            <arg value="diff"/>-->
+<!--                            <arg value="-r"/>-->
+<!--                            <arg value="@{i}:HEAD"/>-->
+<!--                            <arg value="&#45;&#45;summarize"/>-->
+<!--                            <arg value="&#45;&#45;xml"/>-->
+<!--                            <arg value="${svn.local.dir}"/>-->
+<!--                        </exec>-->
+                        <fail message="found revision that can build"/>
+                    </try>
+                    <catch>
+                        <echo>---Compilation failed---</echo>
+                        <exec executable="svn">
+                            <arg value="update"/>
+                            <arg value="-r"/>
+                            <arg value="PREV"/>
+                            <arg value="${svn.local.dir}"/>
+                        </exec>
+                    </catch>
+                </trycatch>
+            </sequential>
+        </for>
     </target>
 
 
