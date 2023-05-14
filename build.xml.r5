@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="web" default="build" basedir=".">
+    <description>
+        author: Dau Cong Tuan Anh
+        Group: P32151
+        contact: tuananhdaucong@gmail.com
+    </description>
+
+    <property file="build.properties"/>
+
+    <macrodef name="generate-hash" description="Generate hash code for project and write to MANIFEST.MF">
+        <attribute name="algorithm"/>
+        <sequential >
+            <signjar jar="${build.dir}/${ant.project.name}.war"
+                     alias="${keystore.alias}"
+                     storepass="${keystore.storepass}"
+                     digestalg="@{algorithm}"/>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="git-check-state" description="compare with copy working files">
+        <attribute name="outputproperty"/>
+        <sequential>
+            <exec executable="git" outputproperty="@{outputproperty}">
+                <arg value="status"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="git-commit"
+              description="commit changes to git repository">
+        <sequential>
+            <exec executable="git" dir="${src.dir}" failonerror="true">
+                <arg line="commit -a -m update"/>
+            </exec>
+        </sequential>
+    </macrodef>
+    <macrodef name="git-push" description="push changes">
+        <sequential>
+            <exec executable="git" dir="${src.dir}" failonerror="true">
+                <arg line="push"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <path id="lib.main.path">
+        <fileset dir="${lib.main.dir}" includes="**/*.jar"/>
+
+    </path>
+
+    <path id="lib.test.path">
+        <path refid="lib.main.path"/>
+        <fileset dir="${lib.test.dir}" includes="**/*.jar"/>
+    </path>
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath refid="lib.main.path"/>
+    </taskdef>
+
+    <target name="compile" description="compilation of project source codes.">
+        <echo>Compiling sources code...</echo>
+        <property name="srcdir" value="${src.main.dir}"/>
+        <mkdir dir="${build.classes.dir}" />
+        <javac srcdir="${srcdir}"
+                destdir="${build.classes.dir}"
+                includeantruntime="false">
+            <classpath refid="lib.main.path" />
+        </javac>
+
+        <echo>Compiling tests code</echo>
+        <mkdir dir="${test.dir}"/>
+        <javac srcdir="${src.test.dir}"
+               destdir="${test.dir}"
+               includeantruntime="false">
+            <classpath>
+                <path refid="lib.test.path"/>
+                <pathelement location="${build.classes.dir}"/>
+            </classpath>
+        </javac>
+    </target>
+    <target name="build"
+            depends="compile"
+            description="Compiling project sources and packing them into an executable jar">
+
+        <echo>Copying libraries on WEB-INF/lib...</echo>
+        <copy todir="${build.web-inf.lib}">
+            <path refid="lib.main.path"/>
+        </copy>
+
+        <echo> Copying all file on WEB-INF...</echo>
+        <copy todir="${build.web-inf}">
+            <fileset dir="${src.main.web}/WEB-INF"/>
+        </copy>
+
+        <echo> Copying resources...</echo>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.main.resources}"/>
+        </copy>
+
+        <echo>Copying all static files to root of war file, ignore directory WEB-INF...</echo>
+        <copy todir="${build.dir}">
+            <fileset dir="${src.main.web}">
+                <exclude name="WEB-INF/**"/>
+            </fileset>
+        </copy>
+
+        <echo>Creating war file...</echo>
+        <property name="war" value="${build.dir}/${ant.project.name}.war"/>
+        <war destfile="${war}" >
+            <fileset dir="${build.dir}" />
+        </war>
+    </target>
+
+    <target name="clean" description="remove compiled project classes and all temporary file">
+        <echo>Deleting classes directory... </echo>
+        <delete dir="${build.dir}"/>
+
+        <echo>Deleting test class directory...</echo>
+        <delete dir="${test.dir}"/>
+
+        <echo>Deleting docs directory...</echo>
+        <delete dir="${doc.dir}"/>
+
+        <echo>Deleting native2ascii directory...</echo>
+        <delete dir="${native2ascii.resources}"/>
+    </target>
+
+    <target name="test" description="run the project's junit tests" depends="build">
+        <echo> Creating directory for test case's report</echo>
+        <mkdir dir="${test.report.dir}"/>
+        <echo> Testing...</echo>
+        <junit printsummary="true"
+                       haltonfailure="true">
+            <classpath>
+                <path refid="lib.test.path"/>
+                <pathelement location="${build.dir}"/>
+                <pathelement location="${build.classes.dir}"/>
+                <pathelement location="${test.dir}"/>
+            </classpath>
+            <formatter type="xml"/>
+            <test name = "TestPoint" todir="${test.report.dir}" />
+        </junit>
+    </target>
+
+    <target name="xml" description="validation of all xml files in the project">
+        <echo> Validating all xml files...</echo>
+        <xmlvalidate failonerror="no">
+            <fileset dir="${src.dir}" includes="**/*.xml"/>
+        </xmlvalidate>
+    </target>
+
+    <target name="music" description="play music when the build completes">
+        <sound>
+            <success source="${music.success.file}"/>
+            <fail source="${music.fail.file}"/>
+        </sound>
+        <antcall target="build"/>
+    </target>
+
+    <target name="doc"
+            description="adding MD5 and SHA-1 project files to MANIFEST.MF,
+            as well as generating and adding javadoc to the archive for all project classes"
+            depends="build">
+        <mkdir dir="${doc.dir}"/>
+        <echo>Generating SHA1 hash code...</echo>
+        <generate-hash algorithm="SHA1"/>
+
+        <echo>Generating MD5 hash code...</echo>
+        <generate-hash algorithm="MD5"/>
+
+        <echo>Generating Javadoc</echo>
+        <javadoc destdir="${doc.dir}"
+                 author="true"
+                 version="true"
+                 use="true">
+            <classpath refid="lib.main.path"/>
+            <fileset dir="${src.main.dir}"/>
+        </javadoc>
+
+        <echo>Compiling jar-archive with javadoc</echo>
+        <jar destfile="${doc.dir}/JavaDocs"
+             basedir="${doc.dir}"
+             update="true"/>
+    </target>
+
+    <target name="native2ascii" description="native2ascii conversion for copies of localization files">
+        <native2ascii src="${src.main.resources}"
+                      dest="${native2ascii.resources}"
+                      includes="**/*.properties"/>
+    </target>
+
+    <target name="diff" description="checks the state of the working copy,
+                                    and if the changes do not concern the classes specified in the parameters file,
+                                    commits to the git repository.">
+        <echo>Detecting list file's change...</echo>
+        <git-check-state outputproperty="diff.status"/>
+        <echo>"${diff.status}"</echo>
+        <echo>Searching for changes in specified classes...</echo>
+        <for param="i" list="${diff.classes}" delimiter=' '>
+            <sequential>
+                <condition property="commit">
+                    <not>
+                        <contains string="diff.status"
+                                  substring="@{i}.java"/>
+                    </not>
+                </condition>
+            </sequential>
+        </for>
+
+        <if>
+            <isset property="commit"/>
+            <then>
+                <echo>Change found: Commit in progress...</echo>
+                <git-commit />
+            </then>
+            <else>
+                <echo>Change is not found: Completing...</echo>
+            </else>
+        </if>
+    </target>
+    <target name="git-push" description="pull all changes to repo">
+        <git-push/>
+    </target>
+    <target name="report" description="in case of successful tests, saves the junit report in xml format,
+                                        adds it to the svn repository and commits">
+        <antcall target="clean"/>
+        <antcall target="test"/>
+        <echo>Test done!</echo>
+
+<!--        <trycatch>-->
+<!--            <try>-->
+<!--                <echo> Transferring report to svn repo...</echo>-->
+<!--                <scp-->
+<!--                        todir="${scp.url}"-->
+<!--                        password="${scp.password}"-->
+<!--                        port="${scp.port}"-->
+<!--                        trust="true">-->
+<!--                    <fileset dir="${test.report.dir}">-->
+<!--                        <include name="*TEST*.xml"/>-->
+<!--                    </fileset>-->
+<!--                </scp>-->
+<!--            </try>-->
+<!--            <catch>-->
+<!--                <echo>Can't transfer report to scp</echo>-->
+<!--            </catch>-->
+<!--        </trycatch>-->
+        <sequential>
+            <exec executable="svn" >
+                <arg value="add"/>
+                <arg value="${test.report.dir}/*TEST*.xml"/>
+                <arg value="--force"/>
+            </exec>
+            <echo>Committing...</echo>
+            <exec executable="svn">
+                <arg value="commit"/>
+                <arg value="-m"/>
+                <arg value="commit_report"/>
+            </exec>
+        </sequential>
+    </target>
+
+    <target name="env" description="builds and runs the program in alternative environments;
+                                    the environment is set by the java version
+                                    and a set of virtual machine arguments in the options file.">
+        <antcall target="clean"/>
+        <antcall target="build"/>
+        <echo>Deploy war file to wildfly environment</echo>
+        <copy todir="${wildfly.deploy.dir}">
+            <file file="${build.dir}/${app.name}.war"/>
+        </copy>
+        <echo> setup JAVA_HOME path</echo>
+        <property name="JAVA_HOME" location="/path/to/java/home"/>
+
+        <exec executable="cmd" osfamily="${env.osfamily}" failonerror="true">
+            <arg value="${env.runcmd}"/>
+            <arg value="${env.script}"/>
+        </exec>
+    </target>
+    <property name="svn.info.command" value="svn info ${svn.trunk.dir}"/>
+    <target name="history" description="if the project fails to compile ( compile target ),
+                                        the previous version from the svn repository is loaded.
+                                        The operation is repeated until the project can be built,
+                                        or the very first revision from the repository is received.
+                                        If such a revision is found, then a file is generated
+                                        containing the result of the diff operation for all files changed
+                                        in the revision immediately following the last working revision.">
+        <exec executable="svn" >
+            <arg value="add"/>
+            <arg value="."/>
+            <arg value="--force"/>
+        </exec>
+        <antcall target="clean"/>
+        <exec executable="cmd" outputproperty="svn.info.output">
+            <arg value="/c"/>
+            <arg value="${svn.info.command}"/>
+        </exec>
+        <propertyregex property="svn.revision" input="${svn.info.output}" regexp="Revision: (\d+)" select="\1"/>
+        <echo> number of revision: ${svn.revision}</echo>
+        <for param="i" begin="${svn.revision}" end="0">
+            <sequential>
+                <trycatch>
+                    <try>
+                        <echo>Trying to compile revision @{i}...</echo>
+                        <antcall target="compile"/>
+<!--                        <exec executable="svn">-->
+<!--                            <arg value="diff"/>-->
+<!--                            <arg value="-r"/>-->
+<!--                            <arg value="@{i}:HEAD"/>-->
+<!--                            <arg value="&#45;&#45;summarize"/>-->
+<!--                            <arg value="&#45;&#45;xml"/>-->
+<!--                            <arg value="${svn.local.dir}"/>-->
+<!--                        </exec>-->
+                        <fail message="found revision that can build"/>
+                    </try>
+                    <catch>
+                        <echo>---Compilation failed---</echo>
+                        <exec executable="svn">
+                            <arg value="update"/>
+                            <arg value="-r"/>
+                            <arg value="PREV"/>
+                            <arg value="${svn.local.dir}"/>
+                        </exec>
+                    </catch>
+                </trycatch>
+            </sequential>
+        </for>
+    </target>
+
+
+</project>
