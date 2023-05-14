@@ -38,7 +38,7 @@
     <macrodef name="git-push" description="push changes">
         <sequential>
             <exec executable="git" dir="${src.dir}" failonerror="true">
-                <arg line="push"/>
+                <arg line="pull"/>
             </exec>
         </sequential>
     </macrodef>
