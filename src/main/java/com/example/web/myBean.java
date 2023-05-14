@@ -90,7 +90,7 @@ public class myBean implements Serializable {
     }
 
     public void check() {
-        System.out.println('c');
+        System.out.print('c');
     }
     // fgvreS
 }
