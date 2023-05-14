@@ -309,7 +309,7 @@
                             <arg value="--xml"/>
                             <arg value="${svn.local.dir}"/>
                         </exec>
-                        <fail message="found revision that can build"/>
+                        <for break="true"/>
                     </try>
                     <catch>
                         <echo>---Compilation failed---</echo>
