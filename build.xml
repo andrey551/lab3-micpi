@@ -268,7 +268,7 @@
             <file file="${build.dir}/${app.name}.war"/>
         </copy>
         <echo> setup JAVA_HOME path</echo>
-        <property name="JAVA_HOME" location="/path/to/java/home"/>
+        <property name="JAVA_HOME" location="${java_location}"/>
 
         <exec executable="cmd" osfamily="${env.osfamily}" failonerror="true">
             <arg value="${env.runcmd}"/>
