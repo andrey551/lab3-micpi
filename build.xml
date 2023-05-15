@@ -2,6 +2,7 @@
 <project name="web" default="build" basedir=".">
     <description>
         author: Dau Cong Tuan Anh
+        co-author: Манжиков Никита Сергеевич
         Group: P32151
         contact: tuananhdaucong@gmail.com
     </description>
@@ -268,7 +269,7 @@
             <file file="${build.dir}/${app.name}.war"/>
         </copy>
         <echo> setup JAVA_HOME path</echo>
-        <property name="JAVA_HOME" location="/path/to/java/home"/>
+        <property name="JAVA_HOME" location="${java_location}"/>
 
         <exec executable="cmd" osfamily="${env.osfamily}" failonerror="true">
             <arg value="${env.runcmd}"/>
@@ -295,20 +296,13 @@
         </exec>
         <propertyregex property="svn.revision" input="${svn.info.output}" regexp="Revision: (\d+)" select="\1"/>
         <echo> number of revision: ${svn.revision}</echo>
+        <mkdir dir="diff"/>
         <for param="i" begin="${svn.revision}" end="0" step="-1">
             <sequential>
                 <trycatch>
                     <try>
                         <echo>Trying to compile revision @{i}...</echo>
                         <antcall target="compile"/>
-                        <exec executable="svn">
-                            <arg value="diff"/>
-                            <arg value="-r"/>
-                            <arg value="@{i}:HEAD"/>
-                            <arg value="--summarize"/>
-                            <arg value="--xml"/>
-                            <arg value="${svn.local.dir}"/>
-                        </exec>
                         <for break="true"/>
                     </try>
                     <catch>
@@ -323,6 +317,15 @@
                 </trycatch>
             </sequential>
         </for>
+        <exec executable="svn">
+            <arg value="diff"/>
+            <arg value="-r"/>
+            <arg value="HEAD"/>
+            <arg value="--summarize"/>
+            <arg value="--xml"/>
+            <arg value="${svn.local.dir}"/>
+            <redirector output="diff/mydiff.path"/>
+        </exec>
     </target>
 
 
