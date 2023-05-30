@@ -226,24 +226,6 @@
         <antcall target="clean"/>
         <antcall target="test"/>
         <echo>Test done!</echo>
-
-<!--        <trycatch>-->
-<!--            <try>-->
-<!--                <echo> Transferring report to svn repo...</echo>-->
-<!--                <scp-->
-<!--                        todir="${scp.url}"-->
-<!--                        password="${scp.password}"-->
-<!--                        port="${scp.port}"-->
-<!--                        trust="true">-->
-<!--                    <fileset dir="${test.report.dir}">-->
-<!--                        <include name="*TEST*.xml"/>-->
-<!--                    </fileset>-->
-<!--                </scp>-->
-<!--            </try>-->
-<!--            <catch>-->
-<!--                <echo>Can't transfer report to scp</echo>-->
-<!--            </catch>-->
-<!--        </trycatch>-->
         <sequential>
             <exec executable="svn" >
                 <arg value="add"/>

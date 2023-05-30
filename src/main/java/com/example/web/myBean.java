@@ -1,14 +1,19 @@
 package com.example.web;
 
-import jakarta.enterprise.context.SessionScoped;
+import com.example.web.MBeans.Area;
+import com.example.web.MBeans.Pointx;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Named;
 
+import javax.management.*;
 import java.io.Serializable;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@SessionScoped
+@ApplicationScoped
 @Named
 public class myBean implements Serializable {
     private static final float[] X_VALUES = {-3, -2, -1, 0, 1, 2, 3};
@@ -19,6 +24,8 @@ public class myBean implements Serializable {
     private String x;
     private String y;
     private String r;
+    Area area;
+    Pointx points;
 // comment 2
     private String message;
 
@@ -50,6 +57,9 @@ public class myBean implements Serializable {
         if(!validateX(x) || !validateY(y) || !validateR(r)){
             Point crt = new Point(getX(), getY(), getR());
             System.out.println(getX() + getY() + getR());
+            points.addPoint(crt);
+            area.setCrtPoint(crt);
+            area.setCrtArea(area.areaFigure());
             storage.add(crt);
             DatabaseHandle dbHandle = new DatabaseHandle();
             String message = dbHandle.insertPoint(crt);
@@ -89,8 +99,15 @@ public class myBean implements Serializable {
         return this.storage;
     }
 
-    public void check() {
-        System.out.print('c');
+    @PostConstruct
+    public void  connectMBean() throws MalformedObjectNameException, NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanException, ReflectionException, AttributeNotFoundException, InstanceNotFoundException, InvalidAttributeValueException {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        ObjectName namePoints = new ObjectName("com.example.web.MBeans.Model:type=Pointx");
+        ObjectName nameArea = new ObjectName("com.example.web.MBeans.Model:type=AreaMBean");
+        area = new Area();
+        points = new Pointx();
+        // Register the MBean with the MBeanServer
+        mbs.registerMBean(points, namePoints);
+        mbs.registerMBean(area, nameArea);
     }
-    // fgvrena
 }

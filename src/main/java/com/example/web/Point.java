@@ -13,6 +13,9 @@ public class Point implements Serializable {
     private float yNum;
     private float rNum;
 
+    public Point() {
+
+    }
     public Point(String x, String y, String r) {
         this.x = x;
         this.y = y;
